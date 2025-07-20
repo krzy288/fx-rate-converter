@@ -30,3 +30,16 @@ jobs:
       working-directory: backend
       run: |
         python -c "import main; print('✅ App module loaded successfully')" 
+
+    - name: Build docker image
+      run: |
+        docker build -t fx-converter .
+
+    - name: Run docker container 
+      run: | 
+        docker run -d -p 8000:8000 --name fx-app fx-converter
+
+    - name: Test if app is live (basic check)
+      run: |
+        sleep 3
+        curl -f http://localhost:8000/docs
