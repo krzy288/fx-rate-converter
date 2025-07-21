@@ -48,3 +48,26 @@ jobs:
       run: |
         sleep 3
         curl -f http://localhost:8000/
+
+  deploy: 
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF
+          cd ~/fx-converter
+          git pull origin master
+          docker stop fx-app || true && docker rm fx-app || true
+          docker build -t fx-app .
+          docker run -d -p 8000:8000 --name fx-app fx-app
+          EOF
+
