@@ -16,6 +16,24 @@ A simple backend service built with **FastAPI**, containerized with **Docker**, 
 
 ---
 
+
+## 🚀 Deployment Info
+The FX Rate Converter app is currently deployed on an AWS EC2 instance:
+
+!!! If not working - then EC2 is turned off due to cost reduction !!!
+
+👉 Live App URL
+
+http://13.49.14.187:8000/
+
+📄 Swagger/OpenAPI documentation available at:
+http://13.49.14.187:8000/docs
+
+The backend is powered by FastAPI and runs inside a Docker container. Deployment is fully automated via GitHub Actions and runs on a t3.micro EC2 instance under the AWS Free Tier.
+
+
+
+
 ## 🧪 Local Development
 
 ```bash
