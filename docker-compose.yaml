@@ -7,3 +7,18 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
+    depends_on:
+      - db
+
+
+  db:
+    image: mysql:8
+    container_name: fx-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: fxdb
+      MYSQL_USER: fxuser
+      MYSQL_PASSWORD: fxpass
+    ports:
+      - "3306:3306"
