@@ -60,3 +60,8 @@ docker build -t fx-converter .
 
 # Run container
 docker run -p 8000:8000 fx-converter
+
+
+#todo
+- add db mysql 
+- docker compose

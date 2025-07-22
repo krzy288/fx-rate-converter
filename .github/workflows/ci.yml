@@ -15,29 +15,25 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Python
+    - name: Set up Python (Test outside Docker)
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
 
-    - name: Install dependencies
+    - name: Install dependencies (Test outside Docker)
       working-directory: backend
       run: | 
         python -m pip install --upgrade pip 
         pip install -r requirements.txt
 
-    - name: Run basic FastAPI checkout
+    - name: Run basic FastAPI checkout (Test outside Docker)
       working-directory: backend
       run: |
         python -c "import main; print('✅ App module loaded successfully')" 
 
-    - name: Build docker image
+    - name: Build and run with Docker compose 
       run: |
-        docker build -t fx-converter .
-
-    - name: Run docker container 
-      run: | 
-        docker run -d -p 8000:8000 --name fx-app fx-converter
+        docker-compose -f docker-compose.yaml up --build -d
 
     - name: Test if app is live (basic check)
       run: |
@@ -48,6 +44,11 @@ jobs:
       run: |
         sleep 3
         curl -f http://localhost:8000/
+
+    - name: Stop Docker containers
+      run: docker-compose -f docker-compose.yaml down
+
+      
 
   deploy: 
     needs: build-test
