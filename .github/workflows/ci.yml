@@ -37,7 +37,7 @@ jobs:
 
     - name: Test if app is live (basic check)
       run: |
-        sleep 3
+        sleep 10
         curl -f http://localhost:8000/docs
         
     - name: Test if app is live (welcome page)
