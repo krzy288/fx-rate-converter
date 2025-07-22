@@ -33,7 +33,7 @@ jobs:
 
     - name: Build and run with Docker compose 
       run: |
-        docker-compose -f docker-compose.yaml up --build -d
+        docker compose -f docker-compose.yaml up --build -d
 
     - name: Test if app is live (basic check)
       run: |
@@ -46,9 +46,9 @@ jobs:
         curl -f http://localhost:8000/
 
     - name: Stop Docker containers
-      run: docker-compose -f docker-compose.yaml down
+      run: docker compose -f docker-compose.yaml down
 
-      
+
 
   deploy: 
     needs: build-test
