@@ -71,3 +71,8 @@ jobs:
             docker run -d -p 8000:8000 --name fx-app fx-app
           EOF
 
+      - name: Clean up old images
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '^fx-app:' | awk 'NR>2 {print \$2}' | xargs -r docker rmi
+          EOF
