@@ -67,9 +67,8 @@ jobs:
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             cd ~/fx-converter
             git pull origin master
-            docker stop fx-app || true && docker rm fx-app || true
-            docker build -t fx-app .
-            docker run -d -p 8000:8000 --name fx-app fx-app
+            docker compose -f docker-compose.yaml down || true
+            docker compose -f docker-compose.yaml up --build -d
           EOF
 
       - name: Clean up old images
