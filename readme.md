@@ -12,6 +12,7 @@ A simple backend service built with **FastAPI**, containerized with **Docker**, 
 - Dockerized app
 - CI/CD pipeline via GitHub Actions
 - Future: AWS deployment (App Runner / ECS)
+- external api for rates
 
 ---
 
