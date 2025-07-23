@@ -60,7 +60,7 @@ def convert(from_currency: str = Query(... , min_length=3 , max_length=3),
     rate = converted / amount
 
     # Save to DB
-    with engine.connect() as conn:
+    with engine.begin() as conn:
         conn.execute(
             text("INSERT INTO conversion_history (from_currency, to_currency, amount, rate, converted, date) VALUES (:from_currency, :to_currency, :amount, :rate, :converted, :date)"),
             {
@@ -72,6 +72,8 @@ def convert(from_currency: str = Query(... , min_length=3 , max_length=3),
                 "date": data["date"]
             }
         )
+
+    print("Saving to DB:", data)
 
     return {
         "from": data["base"],
@@ -91,14 +93,18 @@ async def read_root(request: Request):
 def db_check():
     try:
         with engine.connect() as connection:
-            result = connection.execute(text("SELECT 1"))
-            return {"status": "Database connection successful", "result": result.fetchone()}
+            result = connection.execute(text("SELECT count(*) FROM conversion_history"))
+            print(result)
+            row = result.mappings().fetchone()
+            return {"status": "Database connection successful !", "result": row}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
 
 @app.get("/history")
 def get_history():
     with engine.connect() as conn:
-        result = conn.execute(text("SELECT * FROM conversion_history ORDER BY id DESC LIMIT 10"))
-        rows = [dict(row) for row in result]
+        result = conn.execute(text("SELECT * FROM conversion_history ORDER BY id DESC"))
+        #rows = [dict(row) for row in result]
+        rows = result.mappings().all()
+        print(rows)
     return rows

@@ -63,6 +63,6 @@ docker run -p 8000:8000 fx-converter
 
 
 #todo
-- add db mysql 
-- docker compose
-- new apis
+- cleanup docker volumes on ec2
+- fix db history
+- 
