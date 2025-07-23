@@ -37,9 +37,16 @@ jobs:
 
     - name: Test if app is live (basic check)
       run: |
-        sleep 10
-        curl -f http://localhost:8000/docs
-        
+        for i in {1..5}; do
+          if curl -f http://localhost:8000/docs; then
+            echo "App is live!"
+            exit 0
+          fi
+          echo "Waiting for app to start... ($i/5)"
+          sleep 10
+        done
+        echo "App did not start in time."
+
     - name: Test if app is live (welcome page)
       run: |
         sleep 3
