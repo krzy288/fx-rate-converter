@@ -21,4 +21,4 @@ services:
       MYSQL_USER: fxuser
       MYSQL_PASSWORD: fxpass
     ports:
-      - "3306:3306"
+      - "13306:3306"  # Changed host port to 13306

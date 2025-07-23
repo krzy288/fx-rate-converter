@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 import os
 import requests
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 app = FastAPI()
 
@@ -21,7 +21,7 @@ engine = create_engine(DATABASE_URL)
 
 def create_history_table():
     with engine.connect() as conn:
-        conn.execute("""
+        conn.execute(text("""
             CREATE TABLE IF NOT EXISTS conversion_history (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 from_currency VARCHAR(3),
@@ -31,7 +31,7 @@ def create_history_table():
                 converted FLOAT,
                 date VARCHAR(20)
             )
-        """)
+        """))
 create_history_table()
 
 
@@ -62,8 +62,15 @@ def convert(from_currency: str = Query(... , min_length=3 , max_length=3),
     # Save to DB
     with engine.connect() as conn:
         conn.execute(
-            "INSERT INTO conversion_history (from_currency, to_currency, amount, rate, converted, date) VALUES (%s, %s, %s, %s, %s, %s)",
-            (data["base"], to_currency.upper(), amount, round(rate, 4), converted, data["date"])
+            text("INSERT INTO conversion_history (from_currency, to_currency, amount, rate, converted, date) VALUES (:from_currency, :to_currency, :amount, :rate, :converted, :date)"),
+            {
+                "from_currency": data["base"],
+                "to_currency": to_currency.upper(),
+                "amount": amount,
+                "rate": round(rate, 4),
+                "converted": converted,
+                "date": data["date"]
+            }
         )
 
     return {
@@ -84,7 +91,7 @@ async def read_root(request: Request):
 def db_check():
     try:
         with engine.connect() as connection:
-            result = connection.execute("SELECT 1")
+            result = connection.execute(text("SELECT 1"))
             return {"status": "Database connection successful", "result": result.fetchone()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
@@ -92,6 +99,6 @@ def db_check():
 @app.get("/history")
 def get_history():
     with engine.connect() as conn:
-        result = conn.execute("SELECT * FROM conversion_history ORDER BY id DESC LIMIT 10")
+        result = conn.execute(text("SELECT * FROM conversion_history ORDER BY id DESC LIMIT 10"))
         rows = [dict(row) for row in result]
     return rows
