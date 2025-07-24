@@ -6,3 +6,4 @@ sqlalchemy
 pymysql
 pytest
 cryptography
+httpx>=0.24

@@ -5,19 +5,7 @@ from fastapi.templating import Jinja2Templates
 import os
 import requests
 from sqlalchemy import create_engine, text
-
-app = FastAPI()
-
-templates = Jinja2Templates(directory="templates")
-
-#mount static folder
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-
-#Database configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://fxuser:fxpass@db:3306/fxdb")
-engine = create_engine(DATABASE_URL)
-
+from contextlib import asynccontextmanager
 
 def create_history_table():
     with engine.connect() as conn:
@@ -32,7 +20,39 @@ def create_history_table():
                 date VARCHAR(20)
             )
         """))
-create_history_table()
+
+
+# --- LIFESPAN CONTEXT ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_history_table()  # when app started
+    print("App started, history table created if not exists")
+    yield
+    # opcjonalnie: zamykanie zasobów
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+templates = Jinja2Templates(directory="templates")
+#mount static folder
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+#Database configuration
+# LOCAL DEV
+#DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://fxuser:fxpass@localhost:13306/fxdb")
+# PROD ENV
+DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://fxuser:fxpass@db:3306/fxdb")
+engine = create_engine(DATABASE_URL)
+
+
+
+
+
+
+
+#create_history_table()
 
 
 @app.get("/convert")
