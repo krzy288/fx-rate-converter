@@ -100,6 +100,18 @@ jobs:
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
             cd ~/fx-converter
+            # Wait for service to be up (try 5 times, 10s apart)
+            for i in {1..5}; do
+              if curl -f http://localhost:8000/; then
+                echo "Service is up!"
+                break
+              fi
+              echo "Waiting for service to be up... ($i/5)"
+              sleep 10
+              if [ "$i" -eq 5 ]; then
+                echo "Service did not start in time."; exit 1
+              fi
+            done
             # Run unit tests inside the backend container
             docker compose -f docker-compose.yaml exec -T backend pytest tests/unit --maxfail=1 --disable-warnings --tb=short
             # Run smoke tests with curl
