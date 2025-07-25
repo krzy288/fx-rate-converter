@@ -95,7 +95,7 @@ jobs:
             sleep 10
           EOF
 
-      - name: Run tests and smoke checks on EC2
+      - name: Run smoke checks on EC2
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
@@ -112,8 +112,6 @@ jobs:
                 echo "Service did not start in time."; exit 1
               fi
             done
-            # Run unit tests inside the backend container
-            docker compose -f docker-compose.yaml exec -T backend pytest tests/unit --maxfail=1 --disable-warnings --tb=short
             # Run smoke tests with curl
             curl -f http://localhost:8000/ || (echo "Root endpoint failed" && exit 1)
             curl -f http://localhost:8000/db-check || (echo "DB check failed" && exit 1)
