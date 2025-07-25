@@ -81,13 +81,31 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
+
+
       - name: Deploy to EC2
         run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
             cd ~/fx-converter
             git pull origin master
             docker compose -f docker-compose.yaml down || true
             docker compose -f docker-compose.yaml up --build -d
+            # Wait for containers to be healthy
+            sleep 10
+          EOF
+
+      - name: Run tests and smoke checks on EC2
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
+            cd ~/fx-converter
+            # Run unit tests inside the backend container
+            docker compose -f docker-compose.yaml exec -T backend pytest tests/unit --maxfail=1 --disable-warnings --tb=short
+            # Run smoke tests with curl
+            curl -f http://localhost:8000/ || (echo "Root endpoint failed" && exit 1)
+            curl -f http://localhost:8000/db-check || (echo "DB check failed" && exit 1)
+            curl -f http://localhost:8000/history || echo "History endpoint failed, can be empty if no conversions yet"
           EOF
 
       - name: Clean up old images
