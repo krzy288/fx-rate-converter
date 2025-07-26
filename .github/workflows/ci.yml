@@ -84,24 +84,21 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: 🔄 Copy cleanup.sh to EC2
-        run: |
-         scp -i ~/.ssh/id_rsa ./scripts/cleanup.sh ubuntu@${{ secrets.EC2_HOST }}:/tmp/cleanup.sh
-
-         
-      - name: 🧹 Run cleanup on EC2
-        run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} 'bash /tmp/cleanup.sh'
-
-
-      - name: Deploy to EC2
+      - name: � Deploy and optimize EC2
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
             cd ~/fx-converter
             git pull origin master
+            
+            # Run optimization and cleanup before deployment
+            chmod +x ./scripts/optimize-and-cleanup.sh
+            sudo ./scripts/optimize-and-cleanup.sh
+            
+            # Deploy with Docker Compose
             docker compose -f docker-compose.yaml down || true
             docker compose -f docker-compose.yaml up --build -d
+            
             # Wait for containers to be healthy
             sleep 10
           EOF
@@ -127,13 +124,4 @@ jobs:
             curl -f http://localhost:8000/ || (echo "Root endpoint failed" && exit 1)
             curl -f http://localhost:8000/db-check || (echo "DB check failed" && exit 1)
             curl -f http://localhost:8000/history || echo "History endpoint failed, can be empty if no conversions yet"
-          EOF
-
-      - name: Clean up old images
-        run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            # Remove all but the 2 latest fx-app images
-            docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep '^fx-app:' | grep -v '<none>' | awk 'NR>2 {print \$2}' | xargs -r docker rmi
-            # Remove all dangling images (tagged as <none>)
-            docker images -f "dangling=true" -q | xargs -r docker rmi
           EOF
