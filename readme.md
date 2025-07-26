@@ -19,10 +19,9 @@ A simple currency converter web app built with **FastAPI** and **Jinja2**, featu
 
 ## 🌐 Live Demo
 
-👉 [Live App URL](http://13.49.14.187:8000/)  
-📄 [Swagger/OpenAPI docs](http://13.49.14.187:8000/docs)
+� **Deployed on AWS EC2** (t3.micro instance)
 
-> If the app is not working, the EC2 instance may be turned off for cost reasons.
+> **Note:** Since we're not using an Elastic IP, the public IP address changes when the EC2 instance restarts. The current deployment URL needs to be manually updated in GitHub Actions after each instance restart.
 
 ---
 
@@ -74,7 +73,13 @@ docker compose -f docker-compose.yaml up --build
   - Lint & run unit tests
   - Build & integration test with Docker Compose
   - Deploy to AWS EC2 (via SSH, see `.github/workflows/ci.yml`)
-- Deployment is fully automated. See workflow file for details.
+- **Deployment Preparation**: The `scripts/prepare-deploy.sh` script optimizes the EC2 t3.micro instance:
+  - Creates/configures 1GB swap file for memory management
+  - Optimizes Docker configuration for production
+  - Cleans up system resources and old Docker images
+  - Applies memory optimizations for 1GB RAM constraint
+  - Restarts services with production settings
+- Deployment is fully automated, but requires manual hostname update in GitHub Actions after EC2 restart (no Elastic IP)
 
 ---
 
@@ -88,7 +93,9 @@ docker compose -f docker-compose.yaml up --build
 
 ## 📝 TODO
 
-- [ ] Cleanup Docker volumes on EC2
+- [x] ~~Cleanup Docker volumes on EC2~~ ✅ Implemented in `prepare-deploy.sh`
+- [x] ~~System optimization for t3.micro~~ ✅ Memory and swap optimizations added
 - [ ] Add more Playwright tests
 - [ ] Improve error handling and UX
+- [ ] Consider Elastic IP for stable deployment URL
 - [ ] (Optional) Add user authentication
