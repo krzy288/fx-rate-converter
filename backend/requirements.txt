@@ -7,3 +7,6 @@ pymysql
 pytest
 cryptography
 httpx>=0.24
+playwright
+pytest-playwright
+python-dotenv

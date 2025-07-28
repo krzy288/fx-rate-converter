@@ -81,6 +81,55 @@ docker compose -f docker-compose.yaml up --build
   - Restarts services with production settings
 - Deployment is fully automated, but requires manual hostname update in GitHub Actions after EC2 restart (no Elastic IP)
 
+### 📋 CI/CD Flow Schema
+
+```
+📝 Code Push to `master` (or PR)
+    ↓
+🔍 GitHub Actions Trigger (.github/workflows/ci.yml)
+    ↓
+⚙️ Job 1: Environment Setup & Dependencies & Unit Tests
+    ├── � Checkout code
+    ├── 🐍 Set up Python 3.10
+    ├── 📦 Install dependencies (backend/requirements.txt)
+    └── � Run unit tests (pytest tests/unit --verbose)
+        ↓
+🐳 Job 2: Docker Compose Integration Test (needs: setup)
+    ├── 📥 Checkout code
+    ├── 🏗️ Build and run with Docker Compose
+    ├── ⏳ Wait for app to start (5 attempts, 10s each)
+    ├── � Test if app is live (curl /docs)
+    ├── 💨 Run Smoke Tests
+    │   ├── curl http://localhost:8000/
+    │   ├── curl http://localhost:8000/db-check
+    │   └── curl http://localhost:8000/history
+    └── 🛑 Stop Docker containers
+        ↓
+� Job 3: Deploy to EC2 (needs: docker-build)
+    ├── 📥 Checkout repo
+    ├── � Set up SSH (keys, known_hosts)
+    ├── � SSH to EC2 and Deploy:
+    │   ├── 📦 git pull origin master
+    │   ├── �️ Run optimize-and-cleanup.sh
+    │   ├── 🛑 docker compose down
+    │   ├── 🏗️ docker compose up --build -d
+    │   └── ⏳ Wait 10s for containers
+    └── 💨 Run EC2 Smoke Checks:
+        ├── 🔄 5 attempts to reach localhost:8000
+        ├── ✅ Test root endpoint
+        ├── ✅ Test /db-check
+        └── ✅ Test /history (optional)
+            ↓
+🎯 Live Application Running on EC2
+    ├── 🌐 FastAPI Backend (Port 8000)
+    ├── 🗄️ MySQL Database (Dockerized)
+    └── ✅ Smoke tests passed
+```
+
+**Manual Steps Required:**
+- 🔧 Update EC2 hostname in GitHub Actions secrets after instance restart
+- 🛠️ Run `prepare-deploy.sh` for system optimization (optional but recommended)
+
 ---
 
 ## 🖼️ Frontend
@@ -99,3 +148,4 @@ docker compose -f docker-compose.yaml up --build
 - [ ] Improve error handling and UX
 - [ ] Consider Elastic IP for stable deployment URL
 - [ ] (Optional) Add user authentication
+- [ ] Integrate Plywright test into CI and CD
