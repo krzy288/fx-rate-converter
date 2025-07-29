@@ -19,3 +19,54 @@ def base_url():
     url = os.getenv("BASE_URL")
     print(f"Loaded BASE_URL: {url}")
     return url
+
+@pytest.fixture(scope="session")
+def browser_context_args():
+    """Configure browser context for Docker environment"""
+    return {
+        "ignore_https_errors": True,
+        "bypass_csp": True,
+    }
+
+@pytest.fixture(scope="session")
+def browser_type_launch_args():
+    """Configure browser launch arguments for Docker environment"""
+    return {
+        "headless": True,
+        "args": [
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--disable-web-security",
+            "--disable-features=VizDisplayCompositor",
+            "--allow-running-insecure-content",
+            "--ignore-certificate-errors",
+            "--ignore-ssl-errors",
+            "--ignore-certificate-errors-spki-list",
+            "--ignore-urlfetcher-cert-requests",
+            "--disable-background-timer-throttling",
+            "--disable-backgrounding-occluded-windows",
+            "--disable-renderer-backgrounding",
+            "--disable-extensions",
+            "--disable-plugins",
+            "--disable-images",
+            "--disable-javascript",
+            "--disable-default-apps",
+            "--disable-sync",
+            "--metrics-recording-only",
+            "--no-first-run",
+            "--safebrowsing-disable-auto-update",
+            "--disable-background-networking",
+            "--disable-backgrounding-occluded-windows",
+            "--disable-client-side-phishing-detection",
+            "--disable-default-apps",
+            "--disable-hang-monitor",
+            "--disable-popup-blocking",
+            "--disable-prompt-on-repost",
+            "--disable-sync",
+            "--disable-translate",
+            "--metrics-recording-only",
+            "--no-first-run",
+            "--disable-ipc-flooding-protection"
+        ]
+    }

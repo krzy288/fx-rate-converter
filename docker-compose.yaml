@@ -7,8 +7,17 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
+    environment:
+      - ENV=dev
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 
   db:
@@ -22,3 +31,24 @@ services:
       MYSQL_PASSWORD: fxpass
     ports:
       - "13306:3306"  # Changed host port to 13306
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+
+  tests:
+    build:
+      context: .
+      dockerfile: tests/Dockerfile
+    container_name: fx-tests
+    depends_on:
+      - app
+      - db
+    environment:
+      - BASE_URL=http://app:8000  # Use service name as hostname
+      - ENV=dev
+    volumes:
+      - ./playwright-report:/app/playwright-report

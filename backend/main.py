@@ -6,6 +6,8 @@ import os
 import requests
 from sqlalchemy import create_engine, text
 from contextlib import asynccontextmanager
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+
 
 def create_history_table():
     with engine.connect() as conn:
@@ -33,6 +35,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+if os.getenv("ENV") == "prod":
+    app.add_middleware(HTTPSRedirectMiddleware)
+
 
 templates = Jinja2Templates(directory="templates")
 #mount static folder
@@ -46,7 +51,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://fxuser:fxpass@db:3306/fxdb")
 engine = create_engine(DATABASE_URL)
 
-
+print(f"🌍 ENV: {os.getenv('ENV')}")
 
 
 
@@ -104,6 +109,11 @@ def convert(from_currency: str = Query(... , min_length=3 , max_length=3),
         "date": data["date"]
     }
 
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint for Docker health checks"""
+    return {"status": "healthy"}
 
 @app.get("/")
 async def read_root(request: Request):

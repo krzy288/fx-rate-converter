@@ -10,3 +10,4 @@ httpx>=0.24
 playwright
 pytest-playwright
 python-dotenv
+pytest-html
