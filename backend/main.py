@@ -4,6 +4,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 import os
 import requests
+import socket
+import platform
 from sqlalchemy import create_engine, text
 from contextlib import asynccontextmanager
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
@@ -138,3 +140,46 @@ def get_history():
         rows = result.mappings().all()
         print(rows)
     return rows
+
+@app.get("/server-info")
+def get_server_info():
+    """Get server information for Kubernetes pod identification"""
+    try:
+        # Get hostname (usually pod name in Kubernetes)
+        hostname = socket.gethostname()
+        
+        # Get local IP address
+        try:
+            # Connect to a remote address to get local IP
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            s.close()
+        except:
+            local_ip = "Unable to determine"
+        
+        # Get platform information
+        platform_info = platform.platform()
+        
+        # Get environment variables that might be useful for K8s identification
+        pod_name = os.getenv("HOSTNAME", hostname)  # Often set to pod name in K8s
+        node_name = os.getenv("NODE_NAME", "Unknown")  # Can be set via downward API
+        pod_namespace = os.getenv("POD_NAMESPACE", "Unknown")  # Can be set via downward API
+        pod_ip = os.getenv("POD_IP", local_ip)  # Can be set via downward API
+        
+        return {
+            "hostname": hostname,
+            "pod_name": pod_name,
+            "local_ip": local_ip,
+            "pod_ip": pod_ip,
+            "node_name": node_name,
+            "namespace": pod_namespace,
+            "platform": platform_info,
+            "environment": os.getenv("ENV", "Unknown")
+        }
+    except Exception as e:
+        return {
+            "error": f"Failed to get server info: {str(e)}",
+            "hostname": "Unknown",
+            "local_ip": "Unknown"
+        }

@@ -81,6 +81,56 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // --- Server Info ---
+  document.getElementById('server-info-btn').addEventListener('click', async function() {
+    const serverInfoLoading = document.getElementById('server-info-loading');
+    const serverInfoDiv = document.getElementById('server-info');
+    const serverInfoTable = document.getElementById('server-info-table');
+    
+    serverInfoLoading.textContent = 'Loading server information...';
+    serverInfoDiv.style.display = 'none';
+    
+    try {
+      const res = await fetch('/server-info');
+      if (!res.ok) throw new Error('Failed to fetch server info');
+      const data = await res.json();
+      
+      serverInfoTable.innerHTML = '';
+      
+      // Display server information in a table format
+      const fields = [
+        { key: 'hostname', label: 'Hostname' },
+        { key: 'pod_name', label: 'Pod Name' },
+        { key: 'local_ip', label: 'Local IP' },
+        { key: 'pod_ip', label: 'Pod IP' },
+        { key: 'node_name', label: 'Node Name' },
+        { key: 'namespace', label: 'Namespace' },
+        { key: 'environment', label: 'Environment' },
+        { key: 'platform', label: 'Platform' }
+      ];
+      
+      fields.forEach(field => {
+        if (data[field.key] && data[field.key] !== 'Unknown') {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td style="font-weight: bold; padding: 5px; border-bottom: 1px solid #ddd;">${field.label}:</td>
+            <td style="padding: 5px; border-bottom: 1px solid #ddd;">${data[field.key]}</td>
+          `;
+          serverInfoTable.appendChild(row);
+        }
+      });
+      
+      if (data.error) {
+        serverInfoTable.innerHTML = `<tr><td colspan="2" style="color: red; padding: 10px;">${data.error}</td></tr>`;
+      }
+      
+      serverInfoDiv.style.display = 'block';
+      serverInfoLoading.textContent = '';
+    } catch (err) {
+      serverInfoLoading.textContent = `Error: ${err.message}`;
+    }
+  });
+
   // --- Cat Image ---
   document.getElementById('show-cat-btn').addEventListener('click', function() {
     var img = document.getElementById('fx-image');
