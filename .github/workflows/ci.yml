@@ -74,10 +74,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Free up disk space
+        run: |
+         sudo rm -rf /usr/share/dotnet
+         sudo rm -rf /opt/ghc
+         sudo rm -rf /usr/local/share/boost
+         sudo apt-get clean
 
-              # Add cleanup steps here
+        # Add cleanup steps here
       - name: Clean up APT cache
         run: sudo apt-get clean
 
@@ -86,6 +90,9 @@ jobs:
 
       - name: Remove unnecessary files
         run: rm -rf ~/.cache/*
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Set up SSH
         run: |
