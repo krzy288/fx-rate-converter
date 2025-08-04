@@ -77,6 +77,16 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+              # Add cleanup steps here
+      - name: Clean up APT cache
+        run: sudo apt-get clean
+
+      - name: Remove unused Docker resources
+        run: docker system prune -af || true
+
+      - name: Remove unnecessary files
+        run: rm -rf ~/.cache/*
+
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
