@@ -86,14 +86,17 @@ jobs:
 
       - name: � Deploy and optimize EC2
         run: |
-          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          
+            # Run optimization and cleanup before deployment
+            chmod +x ./scripts/optimize-and-cleanup.sh
+            sudo ./scripts/optimize-and-cleanup.sh
+        
+            ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
             cd ~/fx-converter
             git pull origin master
             
-            # Run optimization and cleanup before deployment
-            chmod +x ./scripts/optimize-and-cleanup.sh
-            sudo ./scripts/optimize-and-cleanup.sh
+
             
             # Deploy with Docker Compose
             docker compose -f docker-compose.yaml down || true
@@ -101,7 +104,7 @@ jobs:
             
             # Wait for containers to be healthy
             sleep 10
-          EOF
+            EOF
 
       - name: Run smoke checks on EC2
         run: |
